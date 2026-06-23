@@ -31,8 +31,10 @@
       .dot.r { background: #ff5f57; } .dot.y { background: #febc2e; } .dot.g { background: #28c840; }
       .title { flex: 1; text-align: center; font-size: 11px; color: #6f8a7e; letter-spacing: .08em; }
 
-      /* The embedded child app + its annotation overlay share one stacking box */
-      .surface { position: relative; }
+      /* The embedded child app + its annotation overlay share one stacking box.
+         Explicit size + overflow:hidden clamps the webview to exactly the device size
+         (a <webview> can otherwise over-grow to fill available space). */
+      .surface { position: relative; width: 1280px; height: 800px; overflow: hidden; }
       webview { display: block; width: 1280px; height: 800px; background: #0d1512; }
       #overlay { position: absolute; inset: 0; pointer-events: none; } /* SVG; turned interactive in redline mode */
 

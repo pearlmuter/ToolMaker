@@ -18,7 +18,21 @@ function applyTransform() {
 }
 // canvas/screen point -> scene-space point (overlay lives in scene space)
 function toScene(cx, cy) { return { x: (cx - tx) / s, y: (cy - ty) / s }; }
-applyTransform();
+
+// Scale the app window to float comfortably on the canvas (like the Figma sketch) and center
+// it, leaving margins and room for the bottom toolbar. Called on load, on resize, and Reset.
+const FRAME_W = 1280, FRAME_H = 834; // titlebar (34) + webview (800)
+function fitToView() {
+  const marginX = 160, marginTop = 60, marginBottom = 130;
+  const availW = window.innerWidth - marginX * 2;
+  const availH = window.innerHeight - marginTop - marginBottom;
+  s = Math.min(1, availW / FRAME_W, availH / FRAME_H);
+  tx = (window.innerWidth - FRAME_W * s) / 2;
+  ty = marginTop + (availH - FRAME_H * s) / 2;
+  applyTransform();
+}
+fitToView();
+window.addEventListener("resize", fitToView);
 
 // ---- tools ----------------------------------------------------------------
 let tool = "select";
@@ -68,7 +82,7 @@ function zoomBy(factor) {
 }
 document.getElementById("zoom-in").onclick = () => zoomBy(1.2);
 document.getElementById("zoom-out").onclick = () => zoomBy(1 / 1.2);
-document.getElementById("reset").onclick = () => { tx = 220; ty = 120; s = 1; applyTransform(); };
+document.getElementById("reset").onclick = fitToView;
 
 // ---- redline drawing (in scene space, so marks stick to the app) ----------
 const SVGNS = "http://www.w3.org/2000/svg";
