@@ -1,0 +1,7 @@
+{
+  "name": "toolmaker-child-app",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A trivial 'generated' Electron app embedded by the Spike B parent.",
+  "main": "main.js"
+}

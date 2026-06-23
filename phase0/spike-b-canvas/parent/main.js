@@ -7,29 +7,43 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 
-const electronBin = require("electron"); // path to the electron executable
+// Inside an Electron main process, require("electron") returns the API object, NOT the
+// executable path. process.execPath IS the Electron binary — use it to relaunch Electron.
+const electronBin = process.execPath;
 const CHILD_DIR = path.join(__dirname, "..", "child-app");
 
 let mainWindow;
 let child;
 
 function spawnChild() {
-  // Launch a genuinely separate Electron app (own main process + renderer).
-  child = spawn(electronBin, [CHILD_DIR, `--user-data-dir=${path.join(os.tmpdir(), "tm-child-userdata")}`], {
-    env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined },
-    stdio: ["ignore", "pipe", "inherit"],
-  });
+  // Robust handshake: child writes its chosen port to this file once its server is up.
+  const portFile = path.join(os.tmpdir(), `tm-child-port-${Date.now()}`);
 
-  child.stdout.on("data", (buf) => {
-    const line = buf.toString();
-    const m = line.match(/CHILD_READY_PORT=(\d+)/);
-    if (m) {
-      const port = Number(m[1]);
+  // Launch a genuinely separate Electron app (own main process + renderer).
+  child = spawn(
+    electronBin,
+    [CHILD_DIR, `--user-data-dir=${path.join(os.tmpdir(), "tm-child-userdata")}`, `--tm-portfile=${portFile}`],
+    { env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined }, stdio: ["ignore", "pipe", "inherit"] }
+  );
+  child.stdout.on("data", (b) => process.stdout.write(`[child] ${b}`));
+  child.on("exit", (code) => console.log(`[parent] child exited (${code})`));
+  child.on("error", (err) => console.error(`[parent] child spawn error: ${err.message}`));
+
+  // Poll the portfile until the child reports its port.
+  const t0 = Date.now();
+  const poll = setInterval(() => {
+    let port;
+    try { port = Number(fs.readFileSync(portFile, "utf-8").trim()); } catch { /* not yet */ }
+    if (port) {
+      clearInterval(poll);
+      try { fs.unlinkSync(portFile); } catch {}
       console.log(`[parent] child ready on port ${port}`);
       if (mainWindow) mainWindow.webContents.send("child-url", `http://127.0.0.1:${port}/`);
+    } else if (Date.now() - t0 > 15000) {
+      clearInterval(poll);
+      console.error("[parent] timed out waiting for child portfile");
     }
-  });
-  child.on("exit", (code) => console.log(`[parent] child exited (${code})`));
+  }, 150);
 }
 
 function createWindow() {

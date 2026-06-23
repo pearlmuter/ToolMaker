@@ -34,10 +34,19 @@ function startServer() {
   });
 }
 
+// Parent passes --tm-portfile=/path; we write our chosen port there once listening.
+// This is the handshake (robust — no reliance on capturing Electron's stdout on macOS).
+function portFileArg() {
+  const a = process.argv.find((x) => x.startsWith("--tm-portfile="));
+  return a ? a.split("=")[1] : null;
+}
+
 app.whenReady().then(async () => {
   const port = await startServer();
-  // IMPORTANT: this line is the handshake the parent waits for.
-  console.log(`CHILD_READY_PORT=${port}`);
+  console.log(`CHILD_READY_PORT=${port}`); // still log for debugging
+
+  const pf = portFileArg();
+  if (pf) fs.writeFileSync(pf, String(port));
 
   // Render the app in-process too (hidden) to prove the real main<->renderer pipeline is live.
   const win = new BrowserWindow({ show: false, width: 900, height: 600 });
