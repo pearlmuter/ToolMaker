@@ -102,7 +102,28 @@ ToolMaker. Generated apps needing AI point at the same local proxy.
 Bundle the Python/MLX runtime + first-run 20 GB model download UX so a layperson installs
 once. Scope it from what Phases 0–6 actually depend on.
 
+## Phase 0 — results
+
+**Spike A — inference: VALIDATED ✅** (2026-06-23)
+- `mlx_vlm.server` serves the model over an OpenAI-compatible endpoint; server ready ~32s
+  after model is cached.
+- Text: coherent generation at **~17.9 tok/s**, ~6s latency. Fits easily in 64 GB RAM.
+  → Risk #3 (speed/mem) acceptable; **~18 tok/s is the main caveat** for heavy agent loops
+    (optimize later: draft/speculative decoding, or accept for a local-first tool).
+- **Vision works** with the standard OpenAI `image_url` base64 payload — no proxy massaging
+  needed. It accurately described the ToolMaker mockup. → **Risk #2 resolved; Phase 5 viable.**
+
+**Spike B — canvas embed: process chain VALIDATED ✅** (visual confirmation pending)
+- Parent Electron spawns a **real separate child Electron process**; child serves its
+  renderer; parent gets the port (file-based handshake) and loads it into a `<webview>` on
+  the canvas. Child confirmed serving `CSV_VALIDATOR_V1.0`.
+- Bugs found + fixed: (1) `require("electron")` returns the API object in a main process —
+  use `process.execPath`; (2) `electron <dir>` needs a `package.json` entry; (3) Electron
+  stdout is flaky on macOS → use a portfile handshake.
+- Remaining: on-screen confirmation of pan / zoom / pinned redlines / screenshot.
+- Gotcha logged: **Node v26 breaks Electron's `extract-zip` postinstall** (see README.md).
+
 ## Suggested starting point
 
 Phase 0, **Spike B** (canvas embedding) — make-or-break for the concept — with Spike A
-(inference) in parallel.
+(inference) in parallel. *(Both now run; see results above.)*
