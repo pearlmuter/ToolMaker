@@ -1,0 +1,13 @@
+{
+  "name": "toolmaker-spike-b-canvas",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Phase 0 Spike B: embed a real child Electron app on a pannable/zoomable/annotatable canvas + screenshot it.",
+  "main": "parent/main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^34.0.0"
+  }
+}

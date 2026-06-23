@@ -1,0 +1,7 @@
+node_modules/
+.venv/
+*.log
+.DS_Store
+dist/
+out/
+phase0/spike-a-inference/sketch.png

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>ToolMaker — Spike B (canvas)</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; overflow: hidden;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background: #0a0f0d; color: #cfe0d6; }
+
+      /* The infinite design canvas */
+      #canvas {
+        position: absolute; inset: 0; cursor: grab;
+        background-color: #0a0f0d;
+        background-image: radial-gradient(#1c2a23 1px, transparent 1px);
+        background-size: 24px 24px;
+      }
+      #canvas.panning { cursor: grabbing; }
+      #canvas.redline { cursor: crosshair; }
+
+      /* Transformed layer: everything here pans/zooms together (annotations stay pinned) */
+      #scene { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
+
+      /* macOS-style window chrome around the embedded child app */
+      .window { width: 1280px; border-radius: 12px; overflow: hidden;
+        box-shadow: 0 30px 80px rgba(0,0,0,.55); border: 1px solid #20302a; }
+      .titlebar { height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 12px;
+        background: #12201b; border-bottom: 1px solid #20302a; }
+      .dot { width: 11px; height: 11px; border-radius: 50%; }
+      .dot.r { background: #ff5f57; } .dot.y { background: #febc2e; } .dot.g { background: #28c840; }
+      .title { flex: 1; text-align: center; font-size: 11px; color: #6f8a7e; letter-spacing: .08em; }
+
+      /* The embedded child app + its annotation overlay share one stacking box */
+      .surface { position: relative; }
+      webview { display: block; width: 1280px; height: 800px; background: #0d1512; }
+      #overlay { position: absolute; inset: 0; pointer-events: none; } /* SVG; turned interactive in redline mode */
+
+      /* HUD + toolbar */
+      #hud { position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
+        font-size: 11px; color: #6f8a7e; background: #0f1814aa; padding: 4px 10px; border-radius: 6px; }
+      #toolbar { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+        display: flex; align-items: center; gap: 6px; padding: 8px;
+        background: #101a16; border: 1px solid #22332c; border-radius: 14px; box-shadow: 0 8px 30px rgba(0,0,0,.5); }
+      #toolbar button { background: transparent; color: #cfe0d6; border: 1px solid transparent;
+        border-radius: 8px; padding: 7px 11px; font: inherit; font-size: 12px; cursor: pointer; }
+      #toolbar button:hover { background: #18271f; }
+      #toolbar button.active { background: #1c3a2c; border-color: #2f6b4d; color: #6ee7a8; }
+      .sep { width: 1px; height: 20px; background: #22332c; margin: 0 4px; }
+      #zoom { min-width: 48px; text-align: center; color: #8aa399; }
+      #waiting { position: fixed; inset: 0; display: grid; place-items: center; color: #4f6a5e; }
+    </style>
+  </head>
+  <body>
+    <div id="canvas">
+      <div id="scene">
+        <div class="window">
+          <div class="titlebar">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="title">CSV_VALIDATOR_V1.0</span>
+          </div>
+          <div class="surface">
+            <webview id="app" src="about:blank" disablewebsecurity></webview>
+            <svg id="overlay"></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="waiting">waiting for child app to start…</div>
+    <div id="hud">1280 × 800 · <span id="zoom">100%</span></div>
+
+    <div id="toolbar">
+      <button id="tool-select" class="active" title="Select / pan">▢ Select</button>
+      <button id="tool-redline" title="Draw a redline rectangle">✎ Redline</button>
+      <span class="sep"></span>
+      <button id="zoom-out">−</button>
+      <span id="zoom-label">100%</span>
+      <button id="zoom-in">+</button>
+      <button id="reset">Reset</button>
+      <span class="sep"></span>
+      <button id="shot">⤓ Screenshot</button>
+      <button id="clear">Clear marks</button>
+    </div>
+
+    <script src="renderer.js"></script>
+  </body>
+</html>
